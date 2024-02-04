@@ -4,12 +4,15 @@
 # COMMAND ----------
 
 current_user_id = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
-datasets_location = f'/FileStore/tmp/{current_user_id}/datasets/'
+datasets_location = f'/Workspace/tmp/{current_user_id}/datasets/'
 
 dbutils.fs.rm(datasets_location, True)
 
 # COMMAND ----------
 
+catalog_name = 'tfnsw_bootcamp_catalog' # TODO add as widget
+spark.sql(f'create catalog if not exists {catalog_name};')
+spark.sql(f'use catalog {catalog_name}')
 database_name = current_user_id.split('@')[0].replace('.','_')+'_bootcamp'
 spark.sql(f'create database if not exists {database_name};')
 spark.sql(f'use {database_name}')
@@ -309,5 +312,5 @@ generate_product_cdc_data()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC You now can run `generate_sales_dataset()` to populate sales dataset and `generate_more_orders()` to generate some orders for a random store with current date.
