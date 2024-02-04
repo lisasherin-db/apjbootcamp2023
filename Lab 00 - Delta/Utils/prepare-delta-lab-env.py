@@ -3,6 +3,11 @@
 
 # COMMAND ----------
 
+# pass catalog var as notebook widget
+dbutils.widgets.text(name="catalog", defaultValue="tfnsw_bootcamp_catalog", label="catalog") 
+
+# COMMAND ----------
+
 current_user_id = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
 datasets_location = f'/Workspace/tmp/{current_user_id}/datasets/'
 
@@ -10,7 +15,7 @@ dbutils.fs.rm(datasets_location, True)
 
 # COMMAND ----------
 
-catalog_name = 'tfnsw_bootcamp_catalog' # TODO add as widget
+catalog_name = dbutils.widgets.get("catalog") # get catalog name from widget
 spark.sql(f'create catalog if not exists {catalog_name};')
 spark.sql(f'use catalog {catalog_name}')
 database_name = current_user_id.split('@')[0].replace('.','_')+'_bootcamp'

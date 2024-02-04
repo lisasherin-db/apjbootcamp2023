@@ -21,11 +21,10 @@
 
 # COMMAND ----------
 
-# MAGIC %run "../Lab 01 - Data Engineering/Utils/prepare-lab-environment"
+# MAGIC %run "../Lab 01 - Data Engineering/Utils/prepare-lab-environment" $catalog="tfnsw_bootcamp_catalog"
 
 # COMMAND ----------
 
-# This will take up to 2min to run
 generate_employee_dataset()
 
 generate_cost_center_dataset()
@@ -34,7 +33,7 @@ generate_cost_center_dataset()
 
 # MAGIC %sql
 # MAGIC -- view table contents
-# MAGIC SELECT * FROM employees
+# MAGIC SELECT * FROM CostCenters
 
 # COMMAND ----------
 
@@ -87,7 +86,7 @@ generate_cost_center_dataset()
 
 # MAGIC %sql
 # MAGIC -- see what groups you are a member of
-# MAGIC SHOW GROUPS WITH USER `<fill your email>`
+# MAGIC SHOW GROUPS WITH USER `<add your email>`
 
 # COMMAND ----------
 
@@ -105,7 +104,7 @@ generate_cost_center_dataset()
 # MAGIC CREATE OR REPLACE FUNCTION cost_centre_filter(cc_param STRING) 
 # MAGIC RETURN 
 # MAGIC   is_account_group_member('admins') or -- admin can access all cost_centres
-# MAGIC   cc_param like "NSW";  -- everybody can access regions containing NSW
+# MAGIC   cc_param like "5%";  -- everybody can access cost center codes starting with 5
 # MAGIC
 # MAGIC ALTER FUNCTION cost_centre_filter OWNER TO `account users`; -- grant access to all user to the function for the demo - don't do it in production
 
@@ -113,13 +112,13 @@ generate_cost_center_dataset()
 
 # MAGIC %sql
 # MAGIC -- country will be the column send as parameter to our SQL function (country_param)
-# MAGIC ALTER TABLE employees SET ROW FILTER bu_filter ON (bu);
+# MAGIC ALTER TABLE costcenters SET ROW FILTER cost_centre_filter ON (cost_center_id);
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC -- Check filter works
-# MAGIC select * from employees
+# MAGIC select * from costcenters
 
 # COMMAND ----------
 
@@ -139,12 +138,12 @@ generate_cost_center_dataset()
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC ALTER TABLE employees ALTER COLUMN address SET MASK simple_mask;
+# MAGIC ALTER TABLE costcenters ALTER COLUMN budget SET MASK simple_mask;
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM employees
+# MAGIC SELECT * FROM costcenters
 
 # COMMAND ----------
 
@@ -182,7 +181,7 @@ generate_cost_center_dataset()
 # MAGIC ALTER TABLE map_costcentre_group OWNER TO `account users`; -- for the demo only, allow all users to edit the table - don't do that in production!
 # MAGIC
 # MAGIC INSERT OVERWRITE map_costcentre_group (identity_group, cost_centre) VALUES
-# MAGIC   ('syd_trains_analysts', Array("10001", "10002", "10003")),
+# MAGIC   ('<add group from SHOW GROUPS command>', Array("10001", "10002", "10003")), -- add group 
 # MAGIC   ('syd_metro_analysts',  Array("20001","20002","20003")),
 # MAGIC   ('rds_analysts', Array("50001","50002"));
 # MAGIC
@@ -195,16 +194,16 @@ generate_cost_center_dataset()
 # MAGIC  RETURN 
 # MAGIC  is_account_group_member('admins') or -- the current user is super admin, we can see everything
 # MAGIC  exists (
-# MAGIC   -- current user is in a group and the group array contains the region. You could also do it with more advanced control, joins etc.
-# MAGIC   -- Spark optimizer will execute that as an efficient JOIN between the map_country_group table and your main table - you can check the query execution in Spark SQL UI for more details.  
-# MAGIC    SELECT 1 FROM map_costcentre_group WHERE is_account_group_member(identity_group) AND array_contains(cost_centres, cc_param)
+# MAGIC   -- current user is in a group and the group array contains the cost center. You could also do it with more advanced control, joins etc.
+# MAGIC    SELECT 1 FROM map_costcentre_group WHERE is_account_group_member(identity_group) AND array_contains(cost_centre, cc_param)
 # MAGIC  );
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC -- check the current rows visible
-# MAGIC select * from employees
+# MAGIC select * from costcenters
+# MAGIC
 
 # COMMAND ----------
 
@@ -216,9 +215,11 @@ generate_cost_center_dataset()
 # MAGIC Unity Catalog integrates with PowerBI and Tableau to easily share data and enforce governance on your data. 
 # MAGIC
 # MAGIC Navigate to your Catalog Explorer, find your tables and click Use with BI Tools to choose you preferred viz tool. Download your connection file and open it to view your datasets in your BI tool.
+# MAGIC
+# MAGIC You can create some filters and masks for `employees` table and test.
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC -- remove mask from table
-# MAGIC ALTER TABLE employees ALTER COLUMN address DROP MASK;
+# MAGIC ALTER TABLE costcenters ALTER COLUMN budget DROP MASK;

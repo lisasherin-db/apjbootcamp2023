@@ -1,24 +1,5 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC
-# MAGIC ## Prepare your lab
-# MAGIC
-# MAGIC Run the next 2 cells to generate some tables we will be using for this lab.
-
-# COMMAND ----------
-
-# MAGIC %run "../Lab 01 - Data Engineering/Utils/prepare-lab-environment"
-
-# COMMAND ----------
-
-# This will take up to 2min to run
-generate_employee_dataset()
-
-generate_cost_center_dataset()
-
-# COMMAND ----------
-
-# MAGIC %md
 # MAGIC ## Tags
 # MAGIC
 # MAGIC Tags are attributes containing keys and optional values that you can apply to different securable objects in Unity Catalog. Tagging is useful for organizing and categorizing different securable objects within a metastore. Using tags also simplifies search and discovery of your data assets.
@@ -40,8 +21,8 @@ generate_cost_center_dataset()
 # MAGIC ALTER TABLE employees SET TAGS ("source" = "ERP", "classification" = "confidential"); 
 # MAGIC
 # MAGIC -- Apply PII tags to table columns
-# MAGIC ALTER TABLE employees ALTER COLUMN <colname> SET TAGS ("PII"="<type of PII>"); -- e.g. tag email, DoB, etc
-# MAGIC ALTER TABLE employees ALTER COLUMN <colname> SET TAGS ("PII"="<type of PII>"); 
+# MAGIC ALTER TABLE employees ALTER COLUMN Email SET TAGS ("PII"="email"); -- e.g. tag email, DoB, etc
+# MAGIC ALTER TABLE employees ALTER COLUMN ContactNumber SET TAGS ("PII"="phone number"); 
 
 # COMMAND ----------
 
@@ -57,7 +38,15 @@ generate_cost_center_dataset()
 
 # MAGIC %sql
 # MAGIC -- add documentation to the table
-# MAGIC ALTER TABLE employees COMMENT "This is a table containing TfNSW employee information sourced from the ERP system";
+# MAGIC COMMENT ON TABLE employees IS "This is a table containing TfNSW employee information sourced from the ERP system";
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+# MAGIC ## Hands On Task!
+# MAGIC
+# MAGIC Choose a column and add some comments
 
 # COMMAND ----------
 
@@ -70,3 +59,7 @@ generate_cost_center_dataset()
 # MAGIC %sql
 # MAGIC -- now let's view documentation that we added
 # MAGIC DESCRIBE TABLE EXTENDED employees; 
+
+# COMMAND ----------
+
+# MAGIC %run "../Lab 01 - Data Engineering/Utils/cleanup-lab-environment" $catalog="<add gold catalog name>"

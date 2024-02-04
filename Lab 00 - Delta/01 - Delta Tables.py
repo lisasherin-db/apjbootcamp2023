@@ -47,7 +47,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run "./Utils/prepare-delta-lab-env"
+# MAGIC %run "./Utils/prepare-delta-lab-env" $catalog="<add bronze catalog name>"
 
 # COMMAND ----------
 

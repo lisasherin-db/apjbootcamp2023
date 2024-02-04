@@ -4,14 +4,22 @@
 
 # COMMAND ----------
 
+# pass catalog var as notebook widget
+dbutils.widgets.text(name="catalog", defaultValue="tfnsw_bootcamp_catalog", label="catalog") 
+
+# COMMAND ----------
+
 current_user_id = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
-datasets_location = f'/FileStore/tmp/{current_user_id}/datasets/'
+datasets_location = f'/Workspace/tmp/{current_user_id}/datasets/'
 
 dbutils.fs.rm(datasets_location, True)
 print(f'Dataset files are generated at location: %s' %datasets_location)
 
 # COMMAND ----------
 
+catalog_name = dbutils.widgets.get("catalog") # get catalog name from widget
+spark.sql(f'create catalog if not exists {catalog_name};')
+spark.sql(f'use catalog {catalog_name}')
 database_name = current_user_id.split('@')[0].replace('.','_')+'_bootcamp'
 spark.sql(f'create database if not exists {database_name};')
 spark.sql(f'use {database_name}')
@@ -327,12 +335,13 @@ generate_product_cdc_data()
 # MAGIC     Gender VARCHAR(20),
 # MAGIC     Address VARCHAR(120),
 # MAGIC     ContactNumber VARCHAR(20),
-# MAGIC     Email VARCHAR(50)
+# MAGIC     Email VARCHAR(50),
+# MAGIC     UpdatedAt DATE
 # MAGIC );
 # MAGIC
 # MAGIC -- Create a table named "cost_centers"
 # MAGIC CREATE OR REPLACE TABLE CostCenters (
-# MAGIC     cost_center_id INT PRIMARY KEY,
+# MAGIC     cost_center_id VARCHAR(10) PRIMARY KEY,
 # MAGIC     cost_center_name VARCHAR(255) NOT NULL,
 # MAGIC     department VARCHAR(100),
 # MAGIC     location VARCHAR(100),
@@ -347,6 +356,8 @@ generate_product_cdc_data()
 from faker import Faker
 import datetime
 import random
+import decimal
+from pyspark.sql.types import StructType, StructField, IntegerType, StringType, DoubleType, DateType, DecimalType
 
 # Create Faker instance
 fake = Faker('en_AU')
@@ -377,28 +388,42 @@ def generate_employee_dataset(n = 200):
   
 # Function to generate random start and end dates
 def generate_dates():
-    start_date = fake.date_between(start_date='-365d', end_date='today')
+    start_date = fake.date_between(start_date='-365d', end_date='-1d')
     end_date = None
     if random.choice([True, False]):  # 50% chance of having an end date
-        end_date = fake.date_between_dates(date_start=start_date, date_end='today')
+        end_date = fake.date_between_dates(date_start=start_date, date_end='-1d')
     return start_date, end_date
 
-def generate_fake_cost_centers(n = 20):
+cost_centers_schema = StructType([
+    StructField("cost_center_id", StringType(), True),
+    StructField("cost_center_name", StringType(), True),
+    StructField("department", StringType(), True),
+    StructField("location", StringType(), True),
+    StructField("manager_name", StringType(), True),
+    StructField("budget", DecimalType(15, 2), True),
+    StructField("start_date", DateType(), True),
+    StructField("end_date", DateType(), True)
+])
+
+def generate_cost_center_dataset(n = 20):
     cost_centers = []
     for _ in range(n):
         start_date, end_date = generate_dates()
         cost_center = {
-            'cost_center_id': fake.random_number(digits=4),
+            'cost_center_id': random.choice(["10001", "10002", "10003", "20001", "20002", "20003", "50001", "50002", "50005"]),
             'cost_center_name': fake.unique.word(),
             'department': random.choice(['Sydney Metro', 'Sydney Trains', 'Infrastructure & Place', 'Corp IT', 'Customer Strategy & Technology']),
             'location': fake.city(),
             'manager_name': fake.name(),
-            'budget': round(random.uniform(50000, 15000000), 2),
+            'budget': decimal.Decimal(round(random.uniform(50000, 15000000),2)),
             'start_date': start_date,
             'end_date': end_date
         }
         cost_centers.append(cost_center)
 
-    spark.createDataFrame(cost_centers).write.mode("overwrite").saveAsTable("CostCenters")
+    spark.createDataFrame(cost_centers, schema=cost_centers_schema).write.mode("overwrite").saveAsTable("CostCenters")
     return "New cost center data generated in cost center table"
-  
+
+# COMMAND ----------
+
+
