@@ -1,5 +1,6 @@
 # Databricks notebook source
 # MAGIC %pip install holidays==0.14.2 -q
+# MAGIC %pip install faker -q
 
 # COMMAND ----------
 
@@ -310,5 +311,94 @@ generate_product_cdc_data()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC You now can run `generate_sales_dataset()` to populate sales dataset and `generate_more_orders()` to generate some orders for a random store with current date.
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE TABLE Employees (
+# MAGIC     EmployeeID VARCHAR(50) PRIMARY KEY,
+# MAGIC     FirstName VARCHAR(50),
+# MAGIC     LastName VARCHAR(50),
+# MAGIC     DateOfBirth DATE,
+# MAGIC     Department VARCHAR(50),
+# MAGIC     HireDate DATE,
+# MAGIC     Gender VARCHAR(20),
+# MAGIC     Address VARCHAR(120),
+# MAGIC     ContactNumber VARCHAR(20),
+# MAGIC     Email VARCHAR(50)
+# MAGIC );
+# MAGIC
+# MAGIC -- Create a table named "cost_centers"
+# MAGIC CREATE OR REPLACE TABLE CostCenters (
+# MAGIC     cost_center_id INT PRIMARY KEY,
+# MAGIC     cost_center_name VARCHAR(255) NOT NULL,
+# MAGIC     department VARCHAR(100),
+# MAGIC     location VARCHAR(100),
+# MAGIC     manager_name VARCHAR(255),
+# MAGIC     budget DECIMAL(15, 2),
+# MAGIC     start_date DATE,
+# MAGIC     end_date DATE
+# MAGIC );
+
+# COMMAND ----------
+
+from faker import Faker
+import datetime
+import random
+
+# Create Faker instance
+fake = Faker('en_AU')
+
+# Function to generate random gender
+def generate_random_gender():
+    return random.choice(['Male', 'Female'])
+  
+def generate_employee_dataset(n = 200):
+    employees_data = []
+    for _ in range(n):
+        employees_data.append({
+            'EmployeeID': fake.uuid4(),
+            'FirstName': fake.first_name(),
+            'LastName': fake.last_name(),
+            'DateOfBirth': fake.date_of_birth(minimum_age=18, maximum_age=65),
+            'Department': random.choice(['Sydney Metro', 'Sydney Trains', 'Infrastructure & Place', 'Corp IT', 'Customer Strategy & Technology']),
+            'HireDate': fake.date_between(start_date='-15y', end_date='today'),
+            'Gender': generate_random_gender(),
+            'Address': random.choice([fake.city(), None, fake.address(), fake.address(), fake.address()]),
+            'ContactNumber': random.choice([fake.phone_number(), fake.phone_number(), None, fake.phone_number(), fake.phone_number()]),
+            'Email': random.choice([fake.email(), None, fake.email(), fake.email(), fake.email(), fake.email()]),
+            'UpdatedAt': fake.date_between(start_date='-15y', end_date='today')
+        })
+    
+    spark.createDataFrame(employees_data).write.mode("overwrite").saveAsTable("Employees")
+    return "New employees data generated in employees table"
+  
+# Function to generate random start and end dates
+def generate_dates():
+    start_date = fake.date_between(start_date='-365d', end_date='today')
+    end_date = None
+    if random.choice([True, False]):  # 50% chance of having an end date
+        end_date = fake.date_between_dates(date_start=start_date, date_end='today')
+    return start_date, end_date
+
+def generate_fake_cost_centers(n = 20):
+    cost_centers = []
+    for _ in range(n):
+        start_date, end_date = generate_dates()
+        cost_center = {
+            'cost_center_id': fake.random_number(digits=4),
+            'cost_center_name': fake.unique.word(),
+            'department': random.choice(['Sydney Metro', 'Sydney Trains', 'Infrastructure & Place', 'Corp IT', 'Customer Strategy & Technology']),
+            'location': fake.city(),
+            'manager_name': fake.name(),
+            'budget': round(random.uniform(50000, 15000000), 2),
+            'start_date': start_date,
+            'end_date': end_date
+        }
+        cost_centers.append(cost_center)
+
+    spark.createDataFrame(cost_centers).write.mode("overwrite").saveAsTable("CostCenters")
+    return "New cost center data generated in cost center table"
+  
