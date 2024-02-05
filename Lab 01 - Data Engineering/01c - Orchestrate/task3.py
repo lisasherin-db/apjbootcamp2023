@@ -1,12 +1,13 @@
 # Databricks notebook source
 dbutils.widgets.text("source_catalog", "tfnsw_bootcamp_catalog", "source_catalog")
 dbutils.widgets.text("target_catalog", "tfnsw_bootcamp_catalog", "target_catalog")
+dbutils.widgets.text("schema", "opal", "schema")
 
 # COMMAND ----------
 
 source_catalog = dbutils.widgets.get("source_catalog")
 target_catalog = dbutils.widgets.get("target_catalog")
-schema_name = "opal"
+schema_name = dbutils.widgets.get("schema")
 
 spark.sql(f"CREATE SCHEMA IF NOT EXISTS {target_catalog}.{schema_name};")
 

@@ -1,12 +1,13 @@
 # Databricks notebook source
 dbutils.widgets.text("raw_data_path", "f'/Workspace/tmp/current_user_id/datasets/", "raw_data_path")
 dbutils.widgets.text("target_catalog", "tfnsw_bootcamp_catalog", "target_catalog")
+dbutils.widgets.text("schema", "opal", "schema")
 
 # COMMAND ----------
 
 raw_path = dbutils.widgets.get("raw_data_path")
 bronze_catalog = dbutils.widgets.get("target_catalog")
-schema_name = "opal"
+schema_name = dbutils.widgets.get("schema")
 table_name = "opal_card_transactions"
 
 spark.sql(f"USE CATALOG {bronze_catalog};")

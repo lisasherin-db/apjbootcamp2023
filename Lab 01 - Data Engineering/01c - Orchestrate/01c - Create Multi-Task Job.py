@@ -63,16 +63,19 @@ quartz_cron_expression = "0 0 16 * * ?"
 task1_params = {
     "raw_data_path": f"{datasets_location}opal-card-transactions/",
     "target_catalog": "tfnsw_bootcamp_catalog", # TODO replace catalog name
+    "schema": f"{my_name.lower().replace(".", "_")}_opal"
 }
 
 task2_params = {
     "source_catalog": "tfnsw_bootcamp_catalog", # TODO replace catalog name
     "target_catalog": "tfnsw_bootcamp_catalog" # TODO replace catalog name
+    "schema": f"{my_name.lower().replace(".", "_")}_opal"
 }
 
 task3_params = {
     "source_catalog": "silver_catalog", # TODO replace catalog name
     "target_catalog": "gold_catalog" # TODO replace catalog name
+    "schema": f"{my_name.lower().replace(".", "_")}_opal"
 }
 
 # let's create a multi-task job 
@@ -97,7 +100,7 @@ job = w.jobs.create(
         # task 3
         jobs.Task(
             task_key="silver-to-gold",
-            notebook_task=jobs.NotebookTask(notebook_path=f"{notebook_path}/task3", base_parameters=task3_params), # TODO fix to task3
+            notebook_task=jobs.NotebookTask(notebook_path=f"{notebook_path}/task3", base_parameters=task3_params),
             existing_cluster_id=cluster_id,
             depends_on=[jobs.TaskDependency(task_key="bronze-to-silver")], # adding dependency on previous task - now this won't run until previous task finished successfully
             email_notifications=jobs.JobEmailNotifications(on_failure=email_notification_lst)
