@@ -1,15 +1,15 @@
 -- Databricks notebook source
 -- MAGIC %md
 -- MAGIC # Delta Live Tables with SQL
--- MAGIC 
+-- MAGIC
 -- MAGIC This notebook uses SQL to declare Delta Live Tables. 
--- MAGIC 
+-- MAGIC
 -- MAGIC [Complete documentation of DLT syntax is available here](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-language-ref.html#sql).
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC 
+-- MAGIC
 -- MAGIC ## Step 1: Create Bronze table for Sales
 
 -- COMMAND ----------
@@ -20,7 +20,7 @@ COMMENT "Bronze sales table with all transactions"
 AS 
 SELECT * 
 FROM
-cloud_files('/FileStore/tmp/${current_user_id}/datasets/sales/', "json") 
+cloud_files('/Workspace/tmp/${current_user_id}/datasets/sales/', "json") 
 
 -- COMMAND ----------
 
@@ -30,7 +30,7 @@ COMMENT "Information about stores"
 AS 
 SELECT *, case when id in ('SYD01', 'MEL01', 'BNE02', 'MEL02', 'PER01', 'CBR01') then 'AUS' when id in ('AKL01', 'AKL02', 'WLG01') then 'NZL' end as country_code 
 FROM  
-cloud_files('/FileStore/tmp/${current_user_id}/datasets/stores/', 'json');
+cloud_files('/Workspace/tmp/${current_user_id}/datasets/stores/', 'json');
 
 -- COMMAND ----------
 
@@ -40,47 +40,47 @@ TBLPROPERTIES ("quality" = "cdc")
 COMMENT "CDC records for our products dataset"
 AS 
 SELECT * FROM 
-cloud_files('/FileStore/tmp/${current_user_id}/datasets/products_cdc/', "json") ;
+cloud_files('/Workspace/tmp/${current_user_id}/datasets/products_cdc/', "json") ;
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC 
+-- MAGIC
 -- MAGIC ## Step 2: Create a Silver table
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC ### Referencing Streaming Tables
--- MAGIC 
+-- MAGIC
 -- MAGIC Queries against other DLT tables and views will always use the syntax `live.table_name`. At execution, the target database name will be substituted, allowing for easily migration of pipelines between DEV/QA/PROD environments.
--- MAGIC 
+-- MAGIC
 -- MAGIC When referring to another streaming DLT table within a pipeline, use the `STREAM(live.table_name)` syntax to ensure incremental processing.
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC ### Quality Control with Constraint Clauses
--- MAGIC 
+-- MAGIC
 -- MAGIC Data expectations are expressed as simple constraint clauses, which are essential where statements against a field in a table.
--- MAGIC 
+-- MAGIC
 -- MAGIC Adding a constraint clause will always collect metrics on violations. If no `ON VIOLATION` clause is included, records violating the expectation will still be included.
--- MAGIC 
+-- MAGIC
 -- MAGIC DLT currently supports two options for the `ON VIOLATION` clause.
--- MAGIC 
+-- MAGIC
 -- MAGIC | mode | behavior |
 -- MAGIC | --- | --- |
 -- MAGIC | `FAIL UPDATE` | Fail when expectation is not met |
 -- MAGIC | `DROP ROW` | Only process records that fulfill expectations |
 -- MAGIC | ` ` | Alert, but still process |
--- MAGIC 
--- MAGIC 
+-- MAGIC
+-- MAGIC
 -- MAGIC Roadmap: `QUARANTINE`
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC 
+-- MAGIC
 -- MAGIC ### Silver Sales Tables
 
 -- COMMAND ----------
@@ -116,7 +116,7 @@ APPLY CHANGES INTO LIVE.silver_sales
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC 
+-- MAGIC
 -- MAGIC ### Silver Stores Table
 
 -- COMMAND ----------
@@ -131,9 +131,9 @@ SELECT * from STREAM(live.bronze_stores)
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC 
+-- MAGIC
 -- MAGIC ### Silver Products Table
--- MAGIC 
+-- MAGIC
 -- MAGIC Our silver_products table will be tracking changes history by using SCD TYPE 2 
 
 -- COMMAND ----------
@@ -154,15 +154,15 @@ APPLY CHANGES INTO LIVE.silver_products
 -- COMMAND ----------
 
 -- MAGIC %md 
--- MAGIC 
+-- MAGIC
 -- MAGIC ## Step 3: Create Gold tables
--- MAGIC 
+-- MAGIC
 -- MAGIC These tables will be used by your business users and will usually contain aggregated datasets
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC 
+-- MAGIC
 -- MAGIC ### Gold table example
 
 -- COMMAND ----------
@@ -178,14 +178,14 @@ GROUP BY l.country_code;
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC 
+-- MAGIC
 -- MAGIC ## Hands On Task!
--- MAGIC 
+-- MAGIC
 -- MAGIC Create 2 more gold tables that would be using any of the existing silver ones and check how they appear on your DLT pipeline
--- MAGIC 
--- MAGIC 
+-- MAGIC
+-- MAGIC
 -- MAGIC ### Advanced option
--- MAGIC 
+-- MAGIC
 -- MAGIC Create another gold table, but this time using python. Note - you will need to use a new notebook for it and later add it to your existing DLT pipeline.
--- MAGIC 
+-- MAGIC
 -- MAGIC You can also create a silver_sales_item table with each row containing information about specific juice sold and get more insights about most popular combinations!
