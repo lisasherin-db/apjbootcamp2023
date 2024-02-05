@@ -426,4 +426,103 @@ def generate_cost_center_dataset(n = 20):
 
 # COMMAND ----------
 
-
+def generate_opal_transactions(num_records=100000):
+    opal_transactions = []
+    for _ in range(num_records):
+        opal_transaction = {
+            "transaction_id": fake.uuid4(),
+            "card_number": fake.credit_card_number(card_type="mastercard"),
+            "transaction_type": random.choice(["top-up", "journey", "balance_inquiry"]),
+            "amount": random.choice(
+                [
+                    1.50,  # Minimum bus fare
+                    2.00,  # Minimum train fare
+                    3.20,  # Minimum ferry fare
+                    2.50,  # Minimum light rail fare
+                    4.00,  # Standard train fare
+                    3.00,  # Standard bus fare
+                    5.00,  # Standard ferry fare
+                    3.50,  # Standard light rail fare
+                    10.00,  # Maximum fare for long-distance journeys
+                    1.80,  # Concession bus fare
+                    2.40,  # Concession train fare
+                    2.80,  # Concession ferry fare
+                    2.00,  # Concession light rail fare
+                    0.50,  # Child bus fare
+                    1.00,  # Child train fare
+                    1.50,  # Child ferry fare
+                    1.20,  # Child light rail fare
+                ]
+            ),
+            "mode": random.choice(["Train", "Bus", "Ferry", "Light Rail"]),
+            "created_at": fake.date_time_this_decade(),
+            "tap_type": random.choice(["on", "off"]),
+            "location": random.choice(
+                [
+                    "-1",
+                    "Central Station",
+                    "Circular Quay",
+                    "Town Hall",
+                    "Wynyard Station",
+                    "Martin Place",
+                    "Parramatta",
+                    "Bondi Junction",
+                    "Chatswood",
+                    "North Sydney",
+                    "Redfern Station",
+                    "Strathfield",
+                    "Ashfield",
+                    "Hornsby",
+                    "Bankstown",
+                    "Manly Wharf",
+                    "Wollongong",
+                    "Penrith",
+                    "Liverpool",
+                    "Hurstville",
+                    "Newcastle",
+                    "Artarmon",
+                    "Burwood",
+                    "Epping",
+                    "Kings Cross",
+                    "Macquarie University",
+                    "Mascot",
+                    "Petersham",
+                    "St. Leonards",
+                    "Sydney Olympic Park",
+                    "Campbelltown",
+                    "Canterbury",
+                    "Cronulla",
+                    "Dee Why",
+                    "Fairfield",
+                    "Gosford",
+                    "Hurlstone Park",
+                    "Kogarah",
+                    "Lidcombe",
+                    "Merrylands",
+                    "Miranda",
+                    "Museum",
+                    "Richmond",
+                    "Rockdale",
+                    "Roseville",
+                    "Seven Hills",
+                    "Sutherland",
+                    "Waterfall",
+                    "Wentworthville",
+                    "Westmead",
+                    "Wollstonecraft",
+                ]
+            ),
+            "card_type": random.choice(
+                [
+                    "Adult",
+                    "Child/Youth",
+                    "Gold",
+                    "Concession",
+                    "School",
+                    "Contactless Payments (CTP)",
+                ]
+            ),
+        }
+        opal_transactions.append(opal_transaction)
+    spark.createDataFrame(opal_transactions).write.mode('Overwrite').json(f"{datasets_location}opal-card-transactions")
+    return "created fake opal transactions"

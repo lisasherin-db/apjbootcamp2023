@@ -98,7 +98,7 @@ dbutils.fs.ls(f"{datasets_location}/stores")
 # MAGIC CREATE TABLE IF NOT EXISTS my_stores;
 # MAGIC
 # MAGIC -- You ingest data into your table from datasets_location/stores location
-# MAGIC -- Exlore what is your file format.. 
+# MAGIC -- Explore what is your file format.. 
 # MAGIC COPY INTO my_stores
 # MAGIC FROM 'TODO: <your source file path >'
 # MAGIC FILEFORMAT = JSON
